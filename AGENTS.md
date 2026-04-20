@@ -1,107 +1,169 @@
-﻿# AGENTS.md
+# AGENTS.md
 
 ## Purpose
-This file defines how AI agents must operate in this repository.
+This file defines the mandatory operating rules for AI agents working in this repository.
 
-These rules are mandatory and override any implicit or assumed behavior.
-
----
-
-## Repository Workflow
-
-For every new task:
-
-1. Ensure the working directory is clean:
-   - `git status`
-   - If not clean, STOP and report
-
-2. Reset to the base branch:
-   - `git checkout master`
-   - `git pull origin master`
-
-3. Create a new branch:
-   - `git checkout -b feature/<task-name>`
+These rules are deterministic and take precedence over defaults, assumptions, memory, or general instructions.
 
 ---
 
-## Development Process
+## Required Startup Sequence
 
-1. Make only the requested changes
-2. Keep changes minimal and focused
-3. Do not modify unrelated files
+Before making any change, the agent MUST perform these steps in order:
+
+```bash
+git status
+git checkout master
+git pull origin master
+git checkout -b feature/<task-name>
+```
+
+### Startup Rules
+- If `git status` is not clean, STOP and report the dirty state
+- If `git checkout master` fails, STOP and report
+- If `git pull origin master` fails, STOP and report
+- Never begin work from the current branch without first returning to `master`
+- Never branch from an existing feature branch unless explicitly instructed to do so
+
+---
+
+## Scope of Work
+
+The agent MUST:
+
+- Make only the requested changes
+- Keep changes minimal and focused
+- Avoid unrelated refactors
+- Avoid modifying unrelated files
+- Preserve existing style and structure unless explicitly asked to change it
+
+The agent MUST NOT:
+
+- Expand the task beyond the request
+- Introduce speculative cleanup
+- Add new dependencies unless explicitly required
+- Change CI, repo settings, secrets, or workflows unless explicitly requested
+
+---
+
+## Branching Rules
+
+### Allowed
+- Create a fresh branch for each task using:
+  - `feature/<task-name>`
+  - `fix/<task-name>`
+  - `chore/<task-name>`
+
+### Prohibited
+- Reusing an existing feature branch
+- Creating a new branch from another feature branch
+- Pushing directly to `master`
+- Merging pull requests
+- Deleting branches
+- Force pushing
+- Rewriting history
+
+If the intended branch name already exists, STOP and report instead of improvising.
 
 ---
 
 ## Commit Rules
 
-- Use clear, descriptive commit messages
+Commits must be clear, concise, and directly related to the requested work.
 
-Examples:
-- `Add Telegram image handling`
-- `Fix null reference in parser`
+### Preferred commit style
+- `feat: add Telegram image handling`
+- `fix: handle null parser result`
+- `chore: update agent workflow contract`
 
-Commands:
-
+### Commit process
 ```bash
-git add .
-git commit -m "<clear message>"
+git add <specific files>
+git commit -m "<type>: <clear summary>"
 ```
+
+### Commit guidance
+- Prefer targeted `git add <file>` over `git add .` when practical
+- Do not bundle unrelated changes into one commit
+- Do not create empty commits
+- Do not amend commits unless explicitly instructed
 
 ---
 
 ## Push Rules
 
+Only push the newly created work branch.
+
 ```bash
-git push -u origin feature/<task-name>
+git push -u origin <branch-name>
 ```
+
+The agent MUST NOT:
+- Push directly to `master`
+- Push tags
+- Push with `--force`
+- Push any branch other than the task branch
 
 ---
 
-## Strict Prohibitions
+## Validation Rules
 
-The agent MUST NOT:
+Before declaring a task complete, the agent SHOULD do any applicable local validation, such as:
 
-- Push directly to `master`
-- Merge pull requests
-- Reuse existing feature branches
-- Create a branch from another feature branch
-- Force push (`--force`)
-- Rewrite history
-- Delete branches
+- Build the project
+- Run relevant tests
+- Run linting or formatting checks already used by the repo
+
+If validation is skipped because no suitable command is known or available, the agent must say so explicitly.
 
 ---
 
 ## Error Handling
 
-If any of the following occur, STOP and report:
+If any of the following occur, STOP and report clearly:
 
+- Working tree is not clean
 - Cannot checkout `master`
-- Cannot pull latest changes
-- Working directory is not clean
-- Merge conflicts
-- Any unexpected git state
+- Cannot pull latest `master`
+- Branch creation fails
+- Branch already exists
+- Merge conflicts occur
+- Build or test failures occur
+- Authentication or push fails
+- Any unexpected git state appears
+
+Do not attempt clever recovery unless explicitly instructed.
+
+---
+
+## Required Final Report
+
+When work is finished, the agent MUST report:
+
+- What changed
+- Files changed
+- Branch name
+- Commit hash
+- Whether build/tests were run
+- Any follow-up or manual merge considerations
 
 ---
 
 ## Definition of Done
 
-A task is complete when:
+A task is complete only when all of the following are true:
 
-- Changes are implemented
-- Code compiles, if applicable
+- Requested changes are implemented
+- Changes are limited to the task scope
+- Applicable validation has been attempted
 - Changes are committed
 - Branch is pushed
-- A summary of changes is provided
+- Final report is provided
 
 ---
 
-## Agent Instructions
+## Instruction Precedence
 
-Before starting any work:
+Before starting work, the agent MUST read this file.
 
-- Read this file
-- Follow it strictly
-
-If any instruction conflicts with this file:
-
-- This file takes precedence
+If any instruction conflicts with this file, this file takes precedence unless the user explicitly states that this file should be ignored for the current task.
